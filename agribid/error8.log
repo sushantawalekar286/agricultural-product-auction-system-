@@ -1,0 +1,68 @@
+﻿[dotenv@17.3.1] injecting env (5) from .env -- tip: ≡ƒöÉ prevent committing .env to code: https://dotenvx.com/precommit
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ≡ƒ¢á∩╕Å  run anywhere with `dotenvx run -- yourcommand`
+MongoDB Connected: localhost
+npx : [31mfailed to load 
+config from D:\agribid\vite.c
+onfig.js[39m
+At line:1 char:1
++ npx tsx server.js > 
+error.log 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: ([31mfa  
+  iled to ....config.js[3   
+ 9m:String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+
+node:internal/process/promise
+s:391
+    triggerUncaughtException(
+err, true /* fromPromise */);
+    ^
+TypeError 
+[ERR_INVALID_URL_SCHEME]: 
+The URL must be of scheme 
+file
+    at fileURLToPath 
+(node:internal/url:1489:11)
+    at finalizeResolution (no
+de:internal/modules/esm/resol
+ve:266:42)
+    at moduleResolve (node:in
+ternal/modules/esm/resolve:93
+3:10)
+    at defaultResolve (node:i
+nternal/modules/esm/resolve:1
+169:11)
+    at nextResolve (node:inte
+rnal/modules/esm/hooks:868:28
+)
+    at resolveExtensions (fil
+e:///D:/agribid/node_modules/
+tsx/dist/esm/index.mjs?177419
+8171377:2:3251)
+    at resolveBase (file:///D
+:/agribid/node_modules/tsx/di
+st/esm/index.mjs?177419817137
+7:2:3641)
+    at resolveDirectory (file
+:///D:/agribid/node_modules/t
+sx/dist/esm/index.mjs?1774198
+171377:2:4243)
+    at resolveTsPaths (file:/
+//D:/agribid/node_modules/tsx
+/dist/esm/index.mjs?177419817
+1377:2:4984)
+    at resolve (file:///D:/ag
+ribid/node_modules/tsx/dist/e
+sm/index.mjs?1774198171377:2:
+5361) {
+  code: 
+'ERR_INVALID_URL_SCHEME'
+}
+
+Node.js v20.18.0
