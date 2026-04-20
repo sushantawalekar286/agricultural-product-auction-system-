@@ -10,6 +10,7 @@ import userRoutes from './server/routes/userRoutes.js';
 import productRoutes from './server/routes/productRoutes.js';
 import auctionRoutes from './server/routes/auctionRoutes.js';
 import bidRoutes from './server/routes/bidRoutes.js';
+import notificationRoutes from './server/routes/notificationRoutes.js';
 import serviceRoutes from './server/routes/serviceRoutes.js';
 import adminRoutes from './server/routes/adminRoutes.js';
 import User from './server/models/User.js';
@@ -46,11 +47,13 @@ const startServer = async () => {
   const app = express();
   const server = http.createServer(app);
   const io = new Server(server, {
-    cors: {
-      origin: '*',
-      methods: ['GET', 'POST']
-    }
-  });
+  cors: {
+    origin: process.env.NODE_ENV === 'production' 
+      ? process.env.FRONTEND_URL 
+      : '*',
+    methods: ['GET', 'POST']
+  }
+});
 
   app.use(cors());
   app.use(express.json());
@@ -60,8 +63,11 @@ const startServer = async () => {
   app.use('/api/products', productRoutes);
   app.use('/api/auctions', auctionRoutes);
   app.use('/api/bids', bidRoutes);
+  app.use('/api/notifications', notificationRoutes);
   app.use('/api/services', serviceRoutes);
   app.use('/api/admin', adminRoutes);
+
+  app.set('io', io);
 
   // Socket setup
   setupBidSocket(io);

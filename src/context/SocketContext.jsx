@@ -10,7 +10,11 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (user) {
-      const newSocket = io();
+      const newSocket = io({
+        auth: {
+          userId: user._id
+        }
+      });
       setSocket(newSocket);
 
       return () => {

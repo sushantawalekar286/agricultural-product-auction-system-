@@ -1,6 +1,7 @@
 import Bid from '../models/Bid.js';
 import Auction from '../models/Auction.js';
 import FraudLog from '../models/FraudLog.js';
+import Notification from '../models/Notification.js';
 import { detectFraud } from '../services/fraudDetectionService.js';
 
 export const placeBid = async (req, res) => {
@@ -25,6 +26,9 @@ export const placeBid = async (req, res) => {
       return res.status(400).json({ message: `Bid must be higher than current highest bid (${minimumBid})` });
     }
 
+    const previousHighestBidderId = auction.winner ? auction.winner.toString() : null;
+    const previousHighestBid = auction.highestBid;
+
     // Fraud detection
     const fraudReason = await detectFraud(req.user._id, auction.product._id, amount, auction.highestBid);
     if (fraudReason) {
@@ -40,15 +44,59 @@ export const placeBid = async (req, res) => {
 
     auction.highestBid = amount;
     auction.winner = req.user._id;
-    
-    // Extend auction if bid placed in last 10 seconds
-    const now = new Date();
-    const timeRemaining = auction.endTime.getTime() - now.getTime();
-    if (timeRemaining < 10000 && timeRemaining > 0) {
-      auction.endTime = new Date(auction.endTime.getTime() + 10000);
+
+    // Extend the auction once when a qualifying last-second bid lands.
+    const now = Date.now();
+    const remainingTime = new Date(auction.endTime).getTime() - now;
+    let auctionExtended = false;
+
+    if (remainingTime <= 10000 && remainingTime > 0) {
+      const updatedAuction = await Auction.findOneAndUpdate(
+        {
+          _id: auction._id,
+          status: 'active',
+          endTime: auction.endTime
+        },
+        {
+          $set: {
+            endTime: new Date(new Date(auction.endTime).getTime() + 60000)
+          }
+        },
+        { new: true }
+      );
+
+      if (updatedAuction) {
+        auction.endTime = updatedAuction.endTime;
+        auctionExtended = true;
+      }
     }
 
     await auction.save();
+
+    if (auctionExtended) {
+      // Keep the extension visible to every watcher on the live auction room.
+      req.app.get('io')?.to(auction._id.toString()).emit('auctionExtended', {
+        auctionId: auction._id,
+        endTime: auction.endTime,
+        message: 'Auction extended by 1 minute!'
+      });
+    }
+
+    if (previousHighestBidderId && previousHighestBidderId !== req.user._id.toString() && previousHighestBid < amount) {
+      const outbidNotification = await Notification.create({
+        user: previousHighestBidderId,
+        message: 'You have been outbid!',
+        type: 'outbid'
+      });
+
+      req.app.get('io')?.to(previousHighestBidderId).emit('notification', {
+        _id: outbidNotification._id,
+        message: outbidNotification.message,
+        type: outbidNotification.type,
+        isRead: outbidNotification.isRead,
+        createdAt: outbidNotification.createdAt
+      });
+    }
     
     const populatedBid = await Bid.findById(bid._id).populate('dealer', 'name');
     return res.status(201).json(populatedBid);

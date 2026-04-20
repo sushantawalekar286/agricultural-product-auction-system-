@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../services/api';
 import { useSocket } from '../context/SocketContext';
@@ -14,9 +14,17 @@ const AuctionDetails = () => {
   const [bidAmount, setBidAmount] = useState('');
   const [error, setError] = useState('');
   const [timeLeft, setTimeLeft] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
+  const statusMessageTimerRef = useRef(null);
   const socket = useSocket();
   const { user } = useAuth();
   const { t } = useTranslation();
+
+  const showStatusMessage = (message) => {
+    setStatusMessage(message);
+    window.clearTimeout(statusMessageTimerRef.current);
+    statusMessageTimerRef.current = window.setTimeout(() => setStatusMessage(''), 3000);
+  };
 
   const fetchAuction = async () => {
     try {
@@ -69,6 +77,14 @@ const AuctionDetails = () => {
       socket.on('auctionClosed', (data) => {
         if (data.auctionId === id) {
           setAuction(prev => prev ? { ...prev, status: 'closed' } : prev);
+          setTimeLeft('EXPIRED');
+        }
+      });
+
+      socket.on('auctionExtended', (data) => {
+        if (data.auctionId === id) {
+          setAuction(prev => prev ? { ...prev, endTime: data.endTime } : prev);
+          showStatusMessage(data.message || 'Auction extended by 1 minute!');
         }
       });
     }
@@ -78,6 +94,7 @@ const AuctionDetails = () => {
         socket.emit('leaveAuction', id);
         socket.off('bidUpdate');
         socket.off('auctionClosed');
+        socket.off('auctionExtended');
       }
     };
   }, [id, socket]);
@@ -87,7 +104,6 @@ const AuctionDetails = () => {
 
     const timer = setInterval(() => {
       const now = new Date();
-      // Ensure auction.endTime is parsed if it's a string
       const end = new Date(auction.endTime);
       const diff = end - now;
       
@@ -95,10 +111,9 @@ const AuctionDetails = () => {
         setTimeLeft('EXPIRED');
         clearInterval(timer);
       } else {
-        const h = Math.floor(diff / 3600000);
-        const m = Math.floor((diff % 3600000) / 60000);
+        const m = Math.floor(diff / 60000);
         const s = Math.floor((diff % 60000) / 1000);
-        setTimeLeft(`${h}h ${m}m ${s}s`);
+        setTimeLeft(`${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
       }
     }, 1000);
 
@@ -238,6 +253,11 @@ const AuctionDetails = () => {
                   Highest bidder: <span className="text-white font-bold">{auction.winner.name}</span>
                 </p>
               )}
+              {statusMessage && (
+                <div className="mt-5 inline-flex items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-300">
+                  {statusMessage}
+                </div>
+              )}
             </div>
 
             {auction.status === 'active' && user?.role === 'dealer' ? (
@@ -296,7 +316,7 @@ const AuctionDetails = () => {
               Bidding Tip
             </h4>
             <p className="text-emerald-700/80 text-sm leading-relaxed">
-              Check the crop demand prediction to understand the market value. Bidding in the last few seconds may extend the auction by 10 seconds.
+              Check the crop demand prediction to understand the market value. Bidding in the last 10 seconds extends the auction by 1 minute.
             </p>
           </div>
         </div>

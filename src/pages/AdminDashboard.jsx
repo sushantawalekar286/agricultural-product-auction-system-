@@ -58,11 +58,10 @@ const AdminDashboard = () => {
 
   const handleStartAuction = async (productId) => {
     try {
-      const durationHours = parseFloat(prompt('Enter auction duration in hours:', '1'));
-      if (isNaN(durationHours) || durationHours <= 0) return;
+      const durationMinutes = parseFloat(prompt('Enter auction duration in minutes:', '5'));
+      if (isNaN(durationMinutes) || durationMinutes <= 0) return;
       const startTime = new Date();
-      const endTime = new Date(startTime.getTime() + durationHours * 3600000);
-      await api.post('/auctions', { productId, startTime, endTime });
+      await api.post('/auctions', { productId, startTime, durationMinutes });
       fetchData();
     } catch (err) {
       alert(err.response?.data?.message || 'Error starting auction');

@@ -1,12 +1,17 @@
 import Auction from '../models/Auction.js';
 import Product from '../models/Product.js';
+import { finalizeAuction } from '../services/auctionTimer.js';
 
 export const startAuction = async (req, res) => {
   try {
-    const { productId, startTime, endTime } = req.body;
+    const { productId, startTime, endTime, durationMinutes } = req.body;
     
-    if (!productId || !startTime || !endTime) {
+    if (!productId) {
       return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    if (!durationMinutes && !endTime) {
+      return res.status(400).json({ message: 'Missing auction duration' });
     }
 
     const product = await Product.findById(productId);
@@ -20,10 +25,19 @@ export const startAuction = async (req, res) => {
     product.status = 'active';
     await product.save();
 
+    const auctionStartTime = startTime ? new Date(startTime) : new Date();
+    const auctionEndTime = durationMinutes
+      ? new Date(auctionStartTime.getTime() + Number(durationMinutes) * 60000)
+      : new Date(endTime);
+
+    if (Number.isNaN(auctionEndTime.getTime())) {
+      return res.status(400).json({ message: 'Invalid auction end time' });
+    }
+
     const auction = await Auction.create({
       product: productId,
-      startTime,
-      endTime,
+      startTime: auctionStartTime,
+      endTime: auctionEndTime,
       highestBid: product.basePrice
     });
     return res.status(201).json(auction);
@@ -68,15 +82,7 @@ export const stopAuction = async (req, res) => {
   try {
     const auction = await Auction.findById(req.params.id);
     if (auction) {
-      auction.status = 'closed';
-      await auction.save();
-      
-      const product = await Product.findById(auction.product);
-      if (product) {
-        product.status = auction.winner ? 'sold' : 'expired';
-        await product.save();
-      }
-      
+      await finalizeAuction(auction, req.app.get('io'), { force: true });
       return res.json({ message: 'Auction stopped' });
     } else {
       return res.status(404).json({ message: 'Auction not found' });

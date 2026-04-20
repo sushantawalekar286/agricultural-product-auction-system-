@@ -2,6 +2,11 @@ export const setupBidSocket = (io) => {
   io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
+    const userId = socket.handshake.auth?.userId;
+    if (userId) {
+      socket.join(userId.toString());
+    }
+
     socket.on('joinAuction', (auctionId) => {
       socket.join(auctionId);
       console.log(`User ${socket.id} joined auction ${auctionId}`);
