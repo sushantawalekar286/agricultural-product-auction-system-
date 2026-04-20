@@ -31,9 +31,10 @@ const Navbar = () => {
     const loadNotifications = async () => {
       try {
         const { data } = await api.get('/notifications');
-        setNotifications(data);
+        setNotifications(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to load notifications:', error);
+        setNotifications([]);
       }
     };
 

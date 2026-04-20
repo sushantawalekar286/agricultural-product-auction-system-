@@ -41,7 +41,7 @@ export const finalizeAuction = async (auctionDoc, io, options = {}) => {
     {
       $set: { status: 'closed' }
     },
-    { new: true }
+    { returnDocument: 'after' }
   );
 
   if (!closedAuction) {

@@ -62,7 +62,7 @@ export const placeBid = async (req, res) => {
             endTime: new Date(new Date(auction.endTime).getTime() + 60000)
           }
         },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       if (updatedAuction) {
