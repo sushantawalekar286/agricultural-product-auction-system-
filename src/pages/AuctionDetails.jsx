@@ -29,6 +29,7 @@ const AuctionDetails = () => {
   const fetchAuction = async () => {
     try {
       const { data } = await api.get(`/auctions/${id}`);
+      console.log('Auction Data:', data);
       setAuction(data);
       if (data && data.product) {
         fetchBids(data.product._id);
@@ -43,64 +44,65 @@ const AuctionDetails = () => {
   const fetchBids = async (productId) => {
     try {
       const { data } = await api.get(`/bids/${productId}`);
-      setBids(data);
+      console.log('Bids:', data);
+      setBids(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
+      setBids([]);
     }
   };
 
   useEffect(() => {
-    let currentAuction = null;
-    
-    fetchAuction().then(data => {
-      currentAuction = data;
-    });
+    fetchAuction();
 
     if (socket) {
       socket.emit('joinAuction', id);
-      
-      socket.on('bidUpdate', (data) => {
+
+      const handleBidUpdate = (data) => {
         setAuction(prev => {
           if (!prev) return prev;
           return { ...prev, highestBid: data.amount, winner: data.dealer };
         });
-        
-        // Use functional state update to access the latest auction state
+
         setAuction(prev => {
-          if (prev && prev.product) {
+          if (prev?.product?._id) {
             fetchBids(prev.product._id);
           }
           return prev;
         });
-      });
-      
-      socket.on('auctionClosed', (data) => {
+      };
+
+      const handleAuctionClosed = (data) => {
         if (data.auctionId === id) {
           setAuction(prev => prev ? { ...prev, status: 'closed' } : prev);
           setTimeLeft('EXPIRED');
         }
-      });
+      };
 
-      socket.on('auctionExtended', (data) => {
+      const handleAuctionExtended = (data) => {
         if (data.auctionId === id) {
           setAuction(prev => prev ? { ...prev, endTime: data.endTime } : prev);
           showStatusMessage(data.message || 'Auction extended by 1 minute!');
         }
-      });
+      };
+
+      socket.on('bidUpdate', handleBidUpdate);
+      socket.on('auctionClosed', handleAuctionClosed);
+      socket.on('auctionExtended', handleAuctionExtended);
+
+      return () => {
+        socket.emit('leaveAuction', id);
+        socket.off('bidUpdate', handleBidUpdate);
+        socket.off('auctionClosed', handleAuctionClosed);
+        socket.off('auctionExtended', handleAuctionExtended);
+      };
     }
 
-    return () => {
-      if (socket) {
-        socket.emit('leaveAuction', id);
-        socket.off('bidUpdate');
-        socket.off('auctionClosed');
-        socket.off('auctionExtended');
-      }
-    };
+    return undefined;
   }, [id, socket]);
 
   useEffect(() => {
-    if (!auction) return;
+    if (!auction?.endTime) return;
 
     const timer = setInterval(() => {
       const now = new Date();
@@ -136,6 +138,7 @@ const AuctionDetails = () => {
   };
 
   if (!auction) return <div className="py-20 text-center">Loading auction...</div>;
+  if (!auction?.product) return <div className="py-20 text-center text-stone-500">Auction not started yet.</div>;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -217,14 +220,14 @@ const AuctionDetails = () => {
             <h3 className="text-2xl font-bold text-stone-800">Bid History</h3>
           </div>
           <div className="space-y-4">
-            {bids.map((bid, i) => (
+            {(bids || []).map((bid, i) => (
               <div key={bid._id} className={`flex items-center justify-between p-5 rounded-2xl border ${i === 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-stone-50 border-stone-100'}`}>
                 <div className="flex items-center gap-4">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${i === 0 ? 'bg-emerald-600 text-white' : 'bg-stone-200 text-stone-500'}`}>
-                    {bid.dealer.name[0]}
+                    {bid?.dealer?.name?.[0] || 'D'}
                   </div>
                   <div>
-                    <p className="font-bold text-stone-800">{bid.dealer.name}</p>
+                    <p className="font-bold text-stone-800">{bid?.dealer?.name || 'Dealer'}</p>
                     <p className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">{new Date(bid.timestamp).toLocaleTimeString()}</p>
                   </div>
                 </div>
