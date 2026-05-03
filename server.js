@@ -13,6 +13,8 @@ import bidRoutes from './server/routes/bidRoutes.js';
 import notificationRoutes from './server/routes/notificationRoutes.js';
 import serviceRoutes from './server/routes/serviceRoutes.js';
 import adminRoutes from './server/routes/adminRoutes.js';
+import farmerRoutes from './server/routes/farmerRoutes.js';
+import dealerRoutes from './server/routes/dealerRoutes.js';
 import User from './server/models/User.js';
 import { setupBidSocket } from './server/sockets/bidSocket.js';
 import { checkAuctions } from './server/services/auctionTimer.js';
@@ -66,6 +68,8 @@ const startServer = async () => {
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/services', serviceRoutes);
   app.use('/api/admin', adminRoutes);
+  app.use('/api/farmer', farmerRoutes);
+  app.use('/api/dealer', dealerRoutes);
 
   app.set('io', io);
 
