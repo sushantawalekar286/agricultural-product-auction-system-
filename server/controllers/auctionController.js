@@ -92,3 +92,34 @@ export const stopAuction = async (req, res) => {
     return res.status(500).json({ message: 'Server error stopping auction', error: error.message });
   }
 };
+
+export const extendAuction = async (req, res) => {
+  try {
+    const { minutes } = req.body;
+    if (!minutes || isNaN(minutes) || minutes <= 0) {
+      return res.status(400).json({ message: 'Invalid extension minutes' });
+    }
+
+    const auction = await Auction.findById(req.params.id);
+    if (!auction) {
+      return res.status(404).json({ message: 'Auction not found' });
+    }
+    if (auction.status === 'closed') {
+      return res.status(400).json({ message: 'Cannot extend a closed auction' });
+    }
+
+    auction.endTime = new Date(new Date(auction.endTime).getTime() + Number(minutes) * 60000);
+    await auction.save();
+
+    req.app.get('io')?.to(auction._id.toString()).emit('auctionExtended', {
+      auctionId: auction._id,
+      endTime: auction.endTime,
+      message: `Auction manually extended by ${minutes} minutes!`
+    });
+
+    return res.json({ message: 'Auction extended successfully', endTime: auction.endTime });
+  } catch (error) {
+    console.error('Error in extendAuction:', error);
+    return res.status(500).json({ message: 'Server error extending auction', error: error.message });
+  }
+};

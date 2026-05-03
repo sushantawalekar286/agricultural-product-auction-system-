@@ -3,7 +3,6 @@ import api from '../services/api';
 import { useTranslation } from 'react-i18next';
 import { Plus, Package, TrendingUp, DollarSign, Trash2, Edit3, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import PredictionCard from '../components/PredictionCard';
 
 const FarmerDashboard = () => {
   const [products, setProducts] = useState([]);
@@ -63,9 +62,9 @@ const FarmerDashboard = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-8">
         {/* Analytics Cards */}
-        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-xl shadow-stone-200/40">
             <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 mb-6">
               <Package size={24} />
@@ -136,11 +135,6 @@ const FarmerDashboard = () => {
               </table>
             </div>
           </div>
-        </div>
-
-        {/* Prediction Sidebar */}
-        <div className="space-y-6">
-          <PredictionCard />
         </div>
       </div>
 

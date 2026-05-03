@@ -10,5 +10,14 @@ const productSchema = new mongoose.Schema({
   status: { type: String, enum: ['pending', 'active', 'sold', 'expired'], default: 'pending' }
 }, { timestamps: true });
 
+productSchema.virtual('bids', {
+  ref: 'Bid',
+  localField: '_id',
+  foreignField: 'product'
+});
+
+productSchema.set('toJSON', { virtuals: true });
+productSchema.set('toObject', { virtuals: true });
+
 const Product = mongoose.model('Product', productSchema);
 export default Product;
