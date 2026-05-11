@@ -12,6 +12,9 @@ import DealerDashboard from './pages/DealerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import AuctionDetails from './pages/AuctionDetails';
 import Home from './pages/Home';
+import DealerOrders from './pages/DealerOrders';
+import FarmerOrders from './pages/FarmerOrders';
+import PlaceOrder from './pages/PlaceOrder';
 
 // Components
 import Navbar from './components/Navbar';
@@ -36,6 +39,24 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                
+                <Route path="/dealer/orders" element={
+                  <ProtectedRoute role="dealer">
+                    <DealerOrders />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/dealer/place-order/:id" element={
+                  <ProtectedRoute role="dealer">
+                    <PlaceOrder />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/farmer/orders" element={
+                  <ProtectedRoute role="farmer">
+                    <FarmerOrders />
+                  </ProtectedRoute>
+                } />
                 
                 <Route path="/farmer/*" element={
                   <ProtectedRoute role="farmer">

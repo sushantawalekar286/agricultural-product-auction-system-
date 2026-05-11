@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'motion/react';
 
 const AuctionDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [auction, setAuction] = useState(null);
   const [bids, setBids] = useState([]);
   const [bidAmount, setBidAmount] = useState('');
@@ -140,6 +141,18 @@ const AuctionDetails = () => {
   if (!auction) return <div className="py-20 text-center">Loading auction...</div>;
   if (!auction?.product) return <div className="py-20 text-center text-stone-500">Auction not started yet.</div>;
 
+  let expiryText = 'N/A';
+  if (auction?.product?.quality?.expiryDate) {
+    const daysLeft = Math.ceil((new Date(auction.product.quality.expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
+    expiryText = daysLeft > 0 ? `Expires in ${daysLeft} days` : 'Expired';
+  }
+
+  const grade = auction?.product?.quality?.grade || 'N/A';
+  let gradeBadge = null;
+  if (grade === 'A') gradeBadge = <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">Premium</span>;
+  else if (grade === 'B') gradeBadge = <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">Standard</span>;
+  else if (grade === 'C') gradeBadge = <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold ml-2">Low Quality</span>;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
       {/* Left Column: Product Info */}
@@ -185,10 +198,14 @@ const AuctionDetails = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-8 border-y border-stone-50">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-8 py-8 border-y border-stone-50">
               <div>
-                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Quantity</p>
+                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Available</p>
                 <p className="text-xl font-bold text-stone-800">{auction.product.quantity} kg</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Market Total</p>
+                <p className="text-xl font-bold text-stone-800">{auction.marketQuantity || auction.product.quantity} kg</p>
               </div>
               <div>
                 <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Farmer</p>
@@ -204,10 +221,42 @@ const AuctionDetails = () => {
               </div>
             </div>
 
+            <div className="mt-10 bg-stone-50 p-6 rounded-3xl border border-stone-100">
+              <h3 className="text-xl font-bold text-stone-800 mb-6 flex items-center">
+                Quality Specifications {gradeBadge}
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div>
+                  <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Size</p>
+                  <p className="text-sm font-bold text-stone-800">{auction.product?.quality?.size || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Ripeness</p>
+                  <p className="text-sm font-bold text-stone-800">{auction.product?.quality?.ripeness || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Moisture</p>
+                  <p className="text-sm font-bold text-stone-800">{auction.product?.quality?.moisture ? `${auction.product.quality.moisture}%` : 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Organic</p>
+                  <p className="text-sm font-bold text-stone-800">{auction.product?.quality?.isOrganic ? 'Yes' : 'No'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Storage</p>
+                  <p className="text-sm font-bold text-stone-800">{auction.product?.quality?.storageCondition || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Expiry Status</p>
+                  <p className={`text-sm font-bold ${expiryText === 'Expired' ? 'text-red-500' : 'text-emerald-600'}`}>{expiryText}</p>
+                </div>
+              </div>
+            </div>
+
             <div className="mt-10">
               <h3 className="text-xl font-bold text-stone-800 mb-4">Product Description</h3>
               <p className="text-stone-500 leading-relaxed">
-                High-quality {auction.product.name} directly from the farm. Carefully harvested and stored to maintain freshness. Ideal for wholesale and retail distribution.
+                {auction.product?.quality?.description || `High-quality ${auction.product.name} directly from the farm. Carefully harvested and stored to maintain freshness.`}
               </p>
             </div>
           </div>
@@ -303,6 +352,16 @@ const AuctionDetails = () => {
                 <p className="text-red-400 font-bold text-xl uppercase tracking-widest">Auction Closed</p>
                 {auction.winner && (
                   <p className="text-stone-400 mt-2">Winner: <span className="text-white font-bold">{auction.winner.name}</span></p>
+                )}
+                {auction.winner && user && auction.winner._id?.toString() === user._id?.toString() && (
+                  <div className="mt-8">
+                    <button 
+                      onClick={() => navigate(`/dealer/place-order/${auction._id}`)}
+                      className="inline-block bg-indigo-600 text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-900/20 transition-all text-sm w-full"
+                    >
+                      Process Order & Payment
+                    </button>
+                  </div>
                 )}
               </div>
             ) : user?.role !== 'dealer' ? (

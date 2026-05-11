@@ -70,6 +70,11 @@ const DealerDashboard = () => {
           </h1>
           <p className="text-stone-500 font-medium tracking-wide mt-1">Acquire top-grade crops via real-time competitive bidding.</p>
         </div>
+        <div className="flex items-center gap-4">
+          <Link to="/dealer/orders" className="bg-stone-800 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest flex items-center gap-2 hover:bg-stone-900 transition-all shadow-xl shadow-stone-800/30 text-sm">
+            <Package size={18} /> My Orders
+          </Link>
+        </div>
       </div>
 
       {/* Dynamic Dealer Analytics */}

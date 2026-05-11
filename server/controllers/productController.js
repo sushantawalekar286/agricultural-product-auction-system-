@@ -2,17 +2,23 @@ import Product from '../models/Product.js';
 
 export const createProduct = async (req, res) => {
   try {
-    const { name, category, quantity, basePrice, images } = req.body;
+    const { name, category, quantity, basePrice, images, quality } = req.body;
     if (!name || !category || !quantity || !basePrice) {
       return res.status(400).json({ message: 'Please fill all required fields' });
     }
+    
+    if (quality?.expiryDate && new Date(quality.expiryDate) < new Date()) {
+      return res.status(400).json({ message: "Expiry date must be in the future" });
+    }
+
     const product = await Product.create({
       name,
       category,
       quantity,
       basePrice,
       farmer: req.user._id,
-      images: images || []
+      images: images || [],
+      quality: quality || {}
     });
     return res.status(201).json(product);
   } catch (error) {

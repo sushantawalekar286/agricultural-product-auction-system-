@@ -53,7 +53,20 @@ export const getActiveAuctions = async (req, res) => {
       path: 'product',
       populate: { path: 'farmer', select: 'name location' }
     });
-    return res.json(auctions);
+    
+    const enhancedAuctions = await Promise.all(auctions.map(async (auc) => {
+      let marketQuantity = 0;
+      if (auc.product && auc.product.name) {
+        const totalQuantity = await Product.aggregate([
+          { $match: { name: auc.product.name } },
+          { $group: { _id: "$name", total: { $sum: "$quantity" } } }
+        ]);
+        marketQuantity = totalQuantity[0]?.total || 0;
+      }
+      return { ...auc.toObject(), marketQuantity };
+    }));
+
+    return res.json(enhancedAuctions);
   } catch (error) {
     console.error('Error in getActiveAuctions:', error);
     return res.status(500).json({ message: 'Server error fetching active auctions', error: error.message });
@@ -71,7 +84,20 @@ export const getAuctionDetails = async (req, res) => {
     if (!auction) {
       return res.status(404).json({ message: 'Auction not found' });
     }
-    return res.json(auction);
+
+    let marketQuantity = 0;
+    if (auction.product && auction.product.name) {
+      const totalQuantity = await Product.aggregate([
+        { $match: { name: auction.product.name } },
+        { $group: { _id: "$name", total: { $sum: "$quantity" } } }
+      ]);
+      marketQuantity = totalQuantity[0]?.total || 0;
+    }
+
+    const auctionObj = auction.toObject();
+    auctionObj.marketQuantity = marketQuantity;
+
+    return res.json(auctionObj);
   } catch (error) {
     console.error('Error in getAuctionDetails:', error);
     return res.status(500).json({ message: 'Server error fetching auction details', error: error.message });

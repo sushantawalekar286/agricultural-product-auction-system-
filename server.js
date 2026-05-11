@@ -12,6 +12,7 @@ import auctionRoutes from './server/routes/auctionRoutes.js';
 import bidRoutes from './server/routes/bidRoutes.js';
 import notificationRoutes from './server/routes/notificationRoutes.js';
 import serviceRoutes from './server/routes/serviceRoutes.js';
+import orderRoutes from './server/routes/orderRoutes.js';
 import adminRoutes from './server/routes/adminRoutes.js';
 import farmerRoutes from './server/routes/farmerRoutes.js';
 import dealerRoutes from './server/routes/dealerRoutes.js';
@@ -67,6 +68,7 @@ const startServer = async () => {
   app.use('/api/bids', bidRoutes);
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/services', serviceRoutes);
+  app.use('/api/orders', orderRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/farmer', farmerRoutes);
   app.use('/api/dealer', dealerRoutes);

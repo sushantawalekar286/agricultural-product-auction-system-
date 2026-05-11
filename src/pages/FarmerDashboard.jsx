@@ -75,7 +75,14 @@ const FarmerDashboard = () => {
   const [earningsData, setEarningsData] = useState(null);
   
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newProduct, setNewProduct] = useState({ name: '', category: '', quantity: '', basePrice: '' });
+  const [newProduct, setNewProduct] = useState({ 
+    name: '', category: '', quantity: '', basePrice: '',
+    quality: {
+      grade: 'A', size: 'Medium', moisture: '', isOrganic: false,
+      harvestDate: '', expiryDate: '', ripeness: 'Ripe', color: '',
+      texture: 'Medium', smell: 'Fresh', defects: [], storageCondition: 'Room Temperature', description: ''
+    }
+  });
   
   const socket = useSocket();
   const [timers, setTimers] = useState({});
@@ -130,7 +137,14 @@ const FarmerDashboard = () => {
     try {
       await api.post('/products', newProduct);
       setShowAddModal(false);
-      setNewProduct({ name: '', category: '', quantity: '', basePrice: '' });
+      setNewProduct({ 
+        name: '', category: '', quantity: '', basePrice: '',
+        quality: {
+          grade: 'A', size: 'Medium', moisture: '', isOrganic: false,
+          harvestDate: '', expiryDate: '', ripeness: 'Ripe', color: '',
+          texture: 'Medium', smell: 'Fresh', defects: [], storageCondition: 'Room Temperature', description: ''
+        }
+      });
       fetchDashboardData();
     } catch (err) {
       console.error(err);
@@ -158,6 +172,9 @@ const FarmerDashboard = () => {
         </div>
         <div className="flex items-center gap-4">
           <NotificationBell />
+          <a href="/farmer/orders" className="bg-stone-100 text-stone-700 px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-stone-200 transition-colors">
+            <Package size={18} /> Orders
+          </a>
           <button 
             onClick={() => setShowAddModal(true)}
             className="bg-emerald-600 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-emerald-700 shadow-lg shadow-emerald-600/30 transition-all active:scale-95"
@@ -289,35 +306,145 @@ const FarmerDashboard = () => {
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div onClick={() => setShowAddModal(false)} className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm"></div>
-          <div className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl p-8 transform transition-all">
-            <div className="flex items-center justify-between mb-6">
+          <div className="relative bg-white w-full max-w-3xl rounded-3xl shadow-2xl p-8 transform transition-all h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between mb-6 shrink-0">
               <h2 className="text-2xl font-black text-stone-800">List New Crop</h2>
               <button onClick={() => setShowAddModal(false)} className="p-2 text-stone-400 hover:bg-stone-100 rounded-full transition-colors">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleAddProduct} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Crop Name</label>
-                <input required type="text" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-medium" placeholder="E.g. Alphonso Mango" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Category</label>
-                <input required type="text" value={newProduct.category} onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-medium" placeholder="E.g. Fruits" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Quantity (kg)</label>
-                  <input required type="number" min="1" value={newProduct.quantity} onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-medium" placeholder="100" />
+            <form onSubmit={handleAddProduct} className="space-y-6 overflow-y-auto pr-4 flex-grow custom-scrollbar">
+              <div className="space-y-4 pb-6 border-b border-stone-100">
+                <h3 className="font-bold text-lg text-emerald-800 bg-emerald-50 px-4 py-2 rounded-xl inline-block mb-2">Basic Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Crop Name</label>
+                    <input required type="text" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-medium" placeholder="E.g. Alphonso Mango" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Category</label>
+                    <input required type="text" value={newProduct.category} onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-medium" placeholder="E.g. Fruits" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Quantity (kg)</label>
+                    <input required type="number" min="1" value={newProduct.quantity} onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-medium" placeholder="100" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Base Price (₹)</label>
+                    <input required type="number" min="1" value={newProduct.basePrice} onChange={(e) => setNewProduct({ ...newProduct, basePrice: e.target.value })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-medium" placeholder="5000" />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Base Price (₹)</label>
-                  <input required type="number" min="1" value={newProduct.basePrice} onChange={(e) => setNewProduct({ ...newProduct, basePrice: e.target.value })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-medium" placeholder="5000" />
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-bold text-lg text-emerald-800 bg-emerald-50 px-4 py-2 rounded-xl inline-block mb-2">Quality & Storage Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Grade</label>
+                    <select value={newProduct.quality.grade} onChange={(e) => setNewProduct({ ...newProduct, quality: { ...newProduct.quality, grade: e.target.value } })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 outline-none font-medium">
+                      <option value="A">Grade A (Premium)</option>
+                      <option value="B">Grade B (Standard)</option>
+                      <option value="C">Grade C (Low)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Size</label>
+                    <select value={newProduct.quality.size} onChange={(e) => setNewProduct({ ...newProduct, quality: { ...newProduct.quality, size: e.target.value } })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 outline-none font-medium">
+                      <option value="Small">Small</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Large">Large</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Ripeness</label>
+                    <select value={newProduct.quality.ripeness} onChange={(e) => setNewProduct({ ...newProduct, quality: { ...newProduct.quality, ripeness: e.target.value } })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 outline-none font-medium">
+                      <option value="Raw">Raw</option>
+                      <option value="Semi-Ripe">Semi-Ripe</option>
+                      <option value="Ripe">Ripe</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Color</label>
+                    <input type="text" value={newProduct.quality.color} onChange={(e) => setNewProduct({ ...newProduct, quality: { ...newProduct.quality, color: e.target.value } })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 outline-none font-medium" placeholder="E.g. bright yellow" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Moisture (%)</label>
+                    <input type="number" min="0" max="100" value={newProduct.quality.moisture} onChange={(e) => setNewProduct({ ...newProduct, quality: { ...newProduct.quality, moisture: e.target.value } })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 outline-none font-medium" placeholder="E.g. 12" />
+                  </div>
+                  <div className="flex items-center gap-3 mt-8">
+                    <input type="checkbox" id="organic" checked={newProduct.quality.isOrganic} onChange={(e) => setNewProduct({ ...newProduct, quality: { ...newProduct.quality, isOrganic: e.target.checked } })} className="w-5 h-5 accent-emerald-600 rounded cursor-pointer" />
+                    <label htmlFor="organic" className="text-sm font-bold uppercase tracking-widest text-emerald-800 cursor-pointer">100% Organic</label>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Harvest Date</label>
+                    <input type="date" value={newProduct.quality.harvestDate} onChange={(e) => setNewProduct({ ...newProduct, quality: { ...newProduct.quality, harvestDate: e.target.value } })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 outline-none font-medium" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Expiry Date</label>
+                    <input required type="date" value={newProduct.quality.expiryDate} onChange={(e) => setNewProduct({ ...newProduct, quality: { ...newProduct.quality, expiryDate: e.target.value } })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 outline-none font-medium" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Texture</label>
+                    <select value={newProduct.quality.texture} onChange={(e) => setNewProduct({ ...newProduct, quality: { ...newProduct.quality, texture: e.target.value } })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 outline-none font-medium">
+                      <option value="Soft">Soft</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Hard">Hard</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Smell</label>
+                    <select value={newProduct.quality.smell} onChange={(e) => setNewProduct({ ...newProduct, quality: { ...newProduct.quality, smell: e.target.value } })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 outline-none font-medium">
+                      <option value="Fresh">Fresh</option>
+                      <option value="Normal">Normal</option>
+                      <option value="Bad">Bad</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Storage Condition</label>
+                    <select value={newProduct.quality.storageCondition} onChange={(e) => setNewProduct({ ...newProduct, quality: { ...newProduct.quality, storageCondition: e.target.value } })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 outline-none font-medium">
+                      <option value="Cold Storage">Cold Storage</option>
+                      <option value="Room Temperature">Room Temperature</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Defects (Check all that apply)</label>
+                  <div className="flex flex-wrap gap-4 bg-stone-50 p-4 rounded-xl border border-stone-200">
+                    {['Spots', 'Cuts', 'Damage', 'Overripe'].map(defect => (
+                      <label key={defect} className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={newProduct.quality.defects.includes(defect)}
+                          onChange={(e) => {
+                            const newDefects = e.target.checked 
+                              ? [...newProduct.quality.defects, defect]
+                              : newProduct.quality.defects.filter(d => d !== defect);
+                            setNewProduct({ ...newProduct, quality: { ...newProduct.quality, defects: newDefects } });
+                          }}
+                          className="accent-emerald-600 w-4 h-4"
+                        />
+                        <span className="text-sm font-medium text-stone-700">{defect}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Description (Optional)</label>
+                  <textarea value={newProduct.quality.description} onChange={(e) => setNewProduct({ ...newProduct, quality: { ...newProduct.quality, description: e.target.value } })} rows="3" className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 outline-none font-medium" placeholder="E.g. excellent condition, highly requested..."></textarea>
                 </div>
               </div>
-              <div className="pt-4">
+
+              <div className="pt-4 shrink-0">
                 <button type="submit" className="w-full bg-emerald-600 text-white py-4 rounded-xl font-black text-lg hover:bg-emerald-700 shadow-lg shadow-emerald-600/30 transition-all active:scale-[0.98]">
-                  Publish Listing &rarr;
+                  Publish Full Listing &rarr;
                 </button>
               </div>
             </form>
