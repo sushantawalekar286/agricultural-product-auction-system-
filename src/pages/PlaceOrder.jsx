@@ -22,6 +22,10 @@ const PlaceOrder = () => {
     const fetchAuction = async () => {
       try {
         const { data } = await api.get(`/auctions/${id}`);
+        if (data.hasOrder) {
+          navigate('/dealer/orders');
+          return;
+        }
         setAuction(data);
         setLoading(false);
       } catch (err) {
@@ -30,7 +34,7 @@ const PlaceOrder = () => {
       }
     };
     fetchAuction();
-  }, [id]);
+  }, [id, navigate]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

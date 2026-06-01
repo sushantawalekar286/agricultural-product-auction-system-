@@ -1,5 +1,6 @@
 import Auction from '../models/Auction.js';
 import Product from '../models/Product.js';
+import Order from '../models/Order.js';
 import { finalizeAuction } from '../services/auctionTimer.js';
 
 export const startAuction = async (req, res) => {
@@ -94,8 +95,11 @@ export const getAuctionDetails = async (req, res) => {
       marketQuantity = totalQuantity[0]?.total || 0;
     }
 
+    const orderExists = await Order.exists({ auction: req.params.id });
+
     const auctionObj = auction.toObject();
     auctionObj.marketQuantity = marketQuantity;
+    auctionObj.hasOrder = !!orderExists;
 
     return res.json(auctionObj);
   } catch (error) {

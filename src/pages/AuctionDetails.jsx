@@ -355,12 +355,21 @@ const AuctionDetails = () => {
                 )}
                 {auction.winner && user && auction.winner._id?.toString() === user._id?.toString() && (
                   <div className="mt-8">
-                    <button 
-                      onClick={() => navigate(`/dealer/place-order/${auction._id}`)}
-                      className="inline-block bg-indigo-600 text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-900/20 transition-all text-sm w-full"
-                    >
-                      Process Order & Payment
-                    </button>
+                    {auction.hasOrder ? (
+                      <button 
+                        onClick={() => navigate(`/dealer/orders`)}
+                        className="inline-block bg-emerald-600 text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-950/20 transition-all text-sm w-full"
+                      >
+                        Track Order Details
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => navigate(`/dealer/place-order/${auction._id}`)}
+                        className="inline-block bg-indigo-600 text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-900/20 transition-all text-sm w-full"
+                      >
+                        Place Order
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
