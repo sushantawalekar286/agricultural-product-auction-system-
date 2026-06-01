@@ -14,7 +14,7 @@ const PlaceOrder = () => {
 
   const [form, setForm] = useState({
     deliveryMethod: 'pickup',
-    paymentMethod: 'online',
+    paymentMethod: 'cod',
     deliveryAddress: ''
   });
 
@@ -60,7 +60,7 @@ const PlaceOrder = () => {
   if (loading) return <div className="py-20 text-center font-bold text-stone-500">Loading Order Details...</div>;
   if (!auction) return <div className="py-20 text-center text-red-500">{error}</div>;
 
-  const deliveryCharge = form.deliveryMethod === 'delivery' ? 100 : 0;
+  const deliveryCharge = form.deliveryMethod === 'delivery' ? 200 : 0;
   const totalAmount = (auction?.highestBid || 0) + deliveryCharge;
 
   return (
@@ -140,18 +140,12 @@ const PlaceOrder = () => {
                   <CreditCard size={16} className="text-emerald-500" /> Payment Route
                 </h3>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <label className={`cursor-pointer p-4 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-2 text-center ${form.paymentMethod === 'online' ? 'border-emerald-500 bg-emerald-50/50' : 'border-stone-100 bg-white hover:border-stone-200'}`}>
-                    <input type="radio" className="sr-only" name="paymentMethod" value="online" checked={form.paymentMethod === 'online'} onChange={handleChange} />
-                    <CreditCard size={24} className={form.paymentMethod === 'online' ? 'text-emerald-500' : 'text-stone-400'} />
-                    <span className={`font-bold text-sm ${form.paymentMethod === 'online' ? 'text-emerald-900' : 'text-stone-600'}`}>Pay Now Online</span>
-                  </label>
-                  
-                  <label className={`cursor-pointer p-4 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-2 text-center ${form.paymentMethod === 'cod' ? 'border-emerald-500 bg-emerald-50/50' : 'border-stone-100 bg-white hover:border-stone-200'}`}>
-                    <input type="radio" className="sr-only" name="paymentMethod" value="cod" checked={form.paymentMethod === 'cod'} onChange={handleChange} />
-                    <Banknote size={24} className={form.paymentMethod === 'cod' ? 'text-emerald-500' : 'text-stone-400'} />
-                    <span className={`font-bold text-sm ${form.paymentMethod === 'cod' ? 'text-emerald-900' : 'text-stone-600'}`}>Cash on Delivery</span>
-                  </label>
+                <div className="p-4 bg-stone-50 border border-stone-200 rounded-2xl flex items-center gap-3">
+                  <Banknote size={24} className="text-emerald-600" />
+                  <div>
+                    <p className="font-bold text-sm text-stone-800">Cash on Delivery (COD)</p>
+                    <p className="text-xs text-stone-500">Pay cash upon pickup or home delivery.</p>
+                  </div>
                 </div>
               </div>
 
@@ -160,7 +154,7 @@ const PlaceOrder = () => {
                 disabled={submitting}
                 className="w-full bg-stone-900 text-white font-black uppercase tracking-widest py-5 rounded-2xl shadow-xl hover:bg-stone-800 disabled:opacity-50 transition-all text-sm mt-6"
               >
-                {submitting ? 'Processing...' : 'Confirm Order & Pay'}
+                {submitting ? 'Processing...' : 'Place Order'}
               </button>
             </form>
           </div>

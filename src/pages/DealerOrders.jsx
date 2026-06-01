@@ -43,22 +43,40 @@ const DealerOrders = () => {
               <div key={order._id} className="p-6 md:p-8 hover:bg-stone-50/50 transition-colors flex flex-col md:flex-row gap-6 md:items-center justify-between">
                 <div>
                   <p className="font-black text-xl text-stone-800 mb-1">{order.product?.name}</p>
-                  <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-widest text-stone-400">
-                    <span className="bg-stone-100 px-3 py-1 rounded-full text-stone-600 border border-stone-200">
-                      {order.quantity} kg
-                    </span>
-                    <span className="bg-emerald-50 px-3 py-1 rounded-full text-emerald-700 border border-emerald-100">
-                      ₹{order.totalAmount}
-                    </span>
-                    <span className="bg-indigo-50 px-3 py-1 rounded-full text-indigo-700 border border-indigo-100 flex items-center gap-1">
-                      <Truck size={12} /> {order.deliveryMethod}
-                    </span>
-                  </div>
-                  <div className="mt-3 text-xs font-bold tracking-widest flex items-center gap-2">
-                    Payment: 
-                    <span className={order.paymentStatus === 'paid' ? 'text-emerald-600' : 'text-amber-500'}>
-                      {order.paymentStatus.toUpperCase()}
-                    </span>
+                  <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-3">
+                    Farmer: <span className="text-indigo-600">{order.farmer?.name || 'N/A'}</span>
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4 p-4 bg-stone-50 rounded-2xl border border-stone-100 text-xs font-bold uppercase tracking-wider text-stone-600">
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-stone-400 mb-0.5">Quantity</p>
+                      <p className="font-black text-stone-700">{order.quantity} kg</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-stone-400 mb-0.5">Winning Price</p>
+                      <p className="font-black text-stone-700">₹{order.totalAmount - order.deliveryCharge}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-stone-400 mb-0.5">Delivery Method</p>
+                      <p className="font-black text-stone-700">{order.deliveryMethod}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-stone-400 mb-0.5">Delivery Charge</p>
+                      <p className="font-black text-stone-700">₹{order.deliveryCharge}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-stone-400 mb-0.5">Total Amount</p>
+                      <p className="font-black text-emerald-700">₹{order.totalAmount}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-stone-400 mb-0.5">Pay Method</p>
+                      <p className="font-black text-stone-700">{order.paymentMethod ? order.paymentMethod.toUpperCase() : 'COD'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-stone-400 mb-0.5">Pay Status</p>
+                      <p className={`font-black ${order.paymentStatus === 'paid' ? 'text-emerald-600' : 'text-amber-500'}`}>
+                        {order.paymentStatus.toUpperCase()}
+                      </p>
+                    </div>
                   </div>
                 </div>
 

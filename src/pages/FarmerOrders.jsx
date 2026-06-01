@@ -65,24 +65,32 @@ const FarmerOrders = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-stone-50 rounded-2xl border border-stone-100">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4 p-4 bg-stone-50 rounded-2xl border border-stone-100">
                     <div>
-                      <p className="text-[10px] uppercase font-bold text-stone-400 mb-1">Delivery Path</p>
-                      <p className="text-xs font-black text-stone-700">{order.deliveryMethod}</p>
+                      <p className="text-[10px] uppercase font-bold text-stone-400 mb-1">Winning Bid</p>
+                      <p className="text-xs font-black text-stone-700">₹{order.totalAmount - order.deliveryCharge}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-stone-400 mb-1">Delivery Charge</p>
+                      <p className="text-xs font-black text-stone-700">₹{order.deliveryCharge}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-stone-400 mb-1">Total Amount</p>
+                      <p className="text-xs font-black text-emerald-700">₹{order.totalAmount}</p>
                     </div>
                     <div>
                       <p className="text-[10px] uppercase font-bold text-stone-400 mb-1">Pay Method</p>
-                      <p className="text-xs font-black text-stone-700">{order.paymentMethod}</p>
+                      <p className="text-xs font-black text-stone-700">{order.paymentMethod ? order.paymentMethod.toUpperCase() : 'COD'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] uppercase font-bold text-stone-400 mb-1">Pay Status</p>
                       <p className={`text-xs font-black ${order.paymentStatus === 'paid' ? 'text-emerald-600' : 'text-amber-500'}`}>
-                        {order.paymentStatus}
+                        {order.paymentStatus ? order.paymentStatus.toUpperCase() : 'PENDING'}
                       </p>
                     </div>
                     <div>
                       <p className="text-[10px] uppercase font-bold text-stone-400 mb-1">Order Status</p>
-                      <p className="text-xs font-black text-indigo-600">
+                      <p className="text-xs font-black text-indigo-600 uppercase">
                         {order.orderStatus.replace(/_/g, ' ')}
                       </p>
                     </div>
@@ -99,38 +107,51 @@ const FarmerOrders = () => {
                 <div className="lg:w-64 space-y-3 p-5 bg-white border border-stone-100 rounded-2xl shadow-sm">
                   <h4 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-3">Quick Actions</h4>
                   
-                  {order.deliveryMethod === 'pickup' && (
-                    <select 
-                      value={order.orderStatus}
-                      onChange={(e) => updateStatus(order._id, e.target.value, undefined)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-xs font-bold text-stone-700 uppercase focus:outline-none focus:border-indigo-500"
-                    >
-                      <option value="placed">Placed</option>
-                      <option value="ready_for_pickup">Ready for Pickup</option>
-                      <option value="picked_up">Picked Up</option>
-                    </select>
-                  )}
+                  <div>
+                    <label className="block text-[9px] font-bold text-stone-400 uppercase mb-1">Transit Status</label>
+                    {order.deliveryMethod === 'pickup' && (
+                      <select 
+                        value={order.orderStatus}
+                        onChange={(e) => updateStatus(order._id, e.target.value, undefined)}
+                        className="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-xs font-bold text-stone-700 uppercase focus:outline-none focus:border-indigo-500"
+                      >
+                        <option value="placed">Placed</option>
+                        <option value="ready_for_pickup">Ready for Pickup</option>
+                        <option value="picked_up">Picked Up</option>
+                      </select>
+                    )}
 
-                  {order.deliveryMethod === 'delivery' && (
-                    <select 
-                      value={order.orderStatus}
-                      onChange={(e) => updateStatus(order._id, e.target.value, undefined)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-xs font-bold text-stone-700 uppercase focus:outline-none focus:border-indigo-500"
-                    >
-                      <option value="placed">Placed</option>
-                      <option value="shipped">Shipped</option>
-                      <option value="delivered">Delivered</option>
-                    </select>
-                  )}
+                    {order.deliveryMethod === 'delivery' && (
+                      <select 
+                        value={order.orderStatus}
+                        onChange={(e) => updateStatus(order._id, e.target.value, undefined)}
+                        className="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-xs font-bold text-stone-700 uppercase focus:outline-none focus:border-indigo-500"
+                      >
+                        <option value="placed">Placed</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                      </select>
+                    )}
+                  </div>
 
-                  <select 
-                    value={order.paymentStatus}
-                    onChange={(e) => updateStatus(order._id, undefined, e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-xs font-bold text-stone-700 uppercase focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="pending">Pending Pay</option>
-                    <option value="paid">Mark Paid</option>
-                  </select>
+                  <div className="pt-2 border-t border-stone-50">
+                    {order.paymentStatus === 'pending' ? (
+                      <button
+                        onClick={() => {
+                          if (window.confirm('Are you sure you want to mark this order as paid?')) {
+                            updateStatus(order._id, undefined, 'paid');
+                          }
+                        }}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-md shadow-emerald-600/10"
+                      >
+                        Mark as Paid
+                      </button>
+                    ) : (
+                      <div className="bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl p-2.5 text-center text-xs font-black uppercase tracking-wider">
+                        Payment Completed
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
