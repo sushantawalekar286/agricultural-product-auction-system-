@@ -4,8 +4,8 @@ import api from '../services/api';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { showBidSuccess, showError, showWarning, showSuccess, showInfo, showValidationError } from '../utils/sweetAlert';
-import { Timer, Gavel, User, History, TrendingUp, AlertCircle } from 'lucide-react';
+import { showSuccess, showInfo } from '../utils/sweetAlert';
+import { Timer, Gavel, User, History, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const AuctionDetails = () => {
@@ -18,9 +18,18 @@ const AuctionDetails = () => {
   const [timeLeft, setTimeLeft] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const statusMessageTimerRef = useRef(null);
+  const [toasts, setToasts] = useState([]);
   const socket = useSocket();
   const { user } = useAuth();
   const { t } = useTranslation();
+
+  const addToast = (message, type = 'info') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 4000);
+  };
 
   const showStatusMessage = (message) => {
     setStatusMessage(message);
@@ -64,7 +73,7 @@ const AuctionDetails = () => {
         setAuction(prev => {
           if (!prev) return prev;
           if (user && prev.winner && prev.winner._id === user._id && data.dealer?._id !== user._id) {
-            showWarning('You Have Been Outbid');
+            addToast('You Have Been Outbid', 'warning');
           }
           return { ...prev, highestBid: data.amount, winner: data.dealer };
         });
@@ -95,7 +104,7 @@ const AuctionDetails = () => {
       const handleAuctionExtended = (data) => {
         if (data.auctionId === id) {
           setAuction(prev => prev ? { ...prev, endTime: data.endTime } : prev);
-          showWarning('Auction Extended by 1 Minute');
+          addToast('Auction Extended by 1 Minute', 'info');
         }
       };
 
@@ -141,11 +150,12 @@ const AuctionDetails = () => {
     
     const amount = parseFloat(bidAmount);
     if (isNaN(amount) || amount <= 0) {
-      showValidationError('Invalid bid amount');
+      setError('Invalid bid amount');
       return;
     }
-    if (auction && amount <= (auction.highestBid || auction.product?.basePrice || 0)) {
-      showValidationError('Your bid must be higher than current bid');
+    const currentHighest = auction.highestBid || auction.product?.basePrice || 0;
+    if (auction && amount <= currentHighest) {
+      setError(`Bid must be higher than current highest bid of ₹${currentHighest}`);
       return;
     }
 
@@ -155,11 +165,9 @@ const AuctionDetails = () => {
         socket.emit('newBid', { auctionId: id, amount, dealer: user });
       }
       setBidAmount('');
-      showBidSuccess('Bid Submitted Successfully');
     } catch (err) {
       const errMsg = err.response?.data?.message || 'Failed to place bid';
       setError(errMsg);
-      showValidationError(errMsg);
     }
   };
 
@@ -416,6 +424,40 @@ const AuctionDetails = () => {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Toast Notification Container */}
+      <div className="fixed top-6 right-6 z-50 flex flex-col gap-3 max-w-sm w-full">
+        <AnimatePresence>
+          {toasts.map(toast => (
+            <motion.div
+              key={toast.id}
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+              className={`p-4 rounded-2xl shadow-xl border backdrop-blur-md flex items-start gap-3 ${
+                toast.type === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-200' :
+                toast.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-200' :
+                toast.type === 'warning' ? 'bg-amber-500/10 border-amber-500/20 text-amber-200' :
+                'bg-stone-900/95 border-stone-850 text-stone-100'
+              }`}
+            >
+              {toast.type === 'warning' && <AlertCircle size={18} className="text-amber-400 shrink-0 mt-0.5" />}
+              {toast.type === 'success' && <CheckCircle size={18} className="text-emerald-400 shrink-0 mt-0.5" />}
+              {toast.type === 'error' && <AlertCircle size={18} className="text-red-400 shrink-0 mt-0.5" />}
+              {toast.type === 'info' && <TrendingUp size={18} className="text-indigo-400 shrink-0 mt-0.5" />}
+              <div className="flex-1 text-sm font-semibold leading-snug">
+                {toast.message}
+              </div>
+              <button 
+                onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+                className="text-stone-400 hover:text-stone-200 text-xs font-bold leading-none p-1 cursor-pointer"
+              >
+                &times;
+              </button>
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   );

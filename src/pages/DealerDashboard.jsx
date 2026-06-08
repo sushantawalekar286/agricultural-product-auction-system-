@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useSocket } from '../context/SocketContext';
-import { showBidSuccess, showError } from '../utils/sweetAlert';
 import { Play, TrendingUp, CheckCircle, Package, Clock, ShieldCheck, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -10,6 +9,15 @@ const DealerDashboard = () => {
   const [activeAuctions, setActiveAuctions] = useState([]);
   const [myBids, setMyBids] = useState([]);
   const [wonAuctions, setWonAuctions] = useState([]);
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = (message, type = 'info') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 4000);
+  };
   
   const socket = useSocket();
 
@@ -54,11 +62,11 @@ const DealerDashboard = () => {
       // Find base requirements if highest is 0 or missing, but backend handles this properly
       const calculatedAmount = Number(currentHighest) + increment;
       await api.post('/bids', { auctionId, amount: calculatedAmount });
-      await showBidSuccess('Bid Submitted Successfully');
+      addToast('Bid Submitted Successfully', 'success');
       // Wait for socket to broadcast, or brutally fetch
       fetchEverything();
     } catch (err) {
-      showError(err.response?.data?.message || 'Error placing bid');
+      addToast(err.response?.data?.message || 'Error placing bid', 'error');
     }
   };
 
@@ -228,7 +236,34 @@ const DealerDashboard = () => {
             </div>
           </div>
 
-        </div>
+      </div>
+    </div>
+
+      {/* Toast Notification Container */}
+      <div className="fixed top-6 right-6 z-50 flex flex-col gap-3 max-w-sm w-full">
+        {toasts.map(toast => (
+          <div
+            key={toast.id}
+            className={`p-4 rounded-2xl shadow-xl border backdrop-blur-md flex items-start gap-3 transition-all duration-300 transform translate-y-0 opacity-100 ${
+              toast.type === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-800 dark:text-red-200' :
+              toast.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-800 dark:text-emerald-200' :
+              toast.type === 'warning' ? 'bg-amber-500/10 border-amber-500/20 text-amber-800 dark:text-amber-200' :
+              'bg-stone-900/95 border-stone-800 text-stone-100'
+            }`}
+          >
+            {toast.type === 'success' && <CheckCircle size={18} className="text-emerald-600 shrink-0 mt-0.5" />}
+            {toast.type === 'error' && <Zap size={18} className="text-red-600 shrink-0 mt-0.5" />}
+            <div className="flex-1 text-sm font-semibold leading-snug">
+              {toast.message}
+            </div>
+            <button 
+              onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+              className="text-stone-400 hover:text-stone-655 text-xs font-bold leading-none p-1 cursor-pointer"
+            >
+              &times;
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );
