@@ -2,7 +2,26 @@ import mongoose from 'mongoose';
 
 const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  category: { type: String, required: true },
+  category: { 
+    type: String, 
+    required: true,
+    enum: [
+      'Fruits',
+      'Vegetables',
+      'Grains',
+      'Pulses',
+      'Oil Seeds',
+      'Cash Crops',
+      'Spices',
+      'Flowers',
+      'Herbs',
+      'Dry Fruits',
+      'Plantation Crops',
+      'Medicinal Plants',
+      'Fodder Crops',
+      'Organic Products'
+    ]
+  },
   quantity: { type: Number, required: true },
   basePrice: { type: Number, required: true },
   farmer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

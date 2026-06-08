@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useSocket } from '../context/SocketContext';
 import { Plus, Package, TrendingUp, DollarSign, Trash2, Edit3, X, Clock, Bell, Check } from 'lucide-react';
+import { detectCategory } from '../utils/categoryDetector';
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
@@ -75,6 +76,7 @@ const FarmerDashboard = () => {
   const [earningsData, setEarningsData] = useState(null);
   
   const [showAddModal, setShowAddModal] = useState(false);
+  const [error, setError] = useState('');
   const [newProduct, setNewProduct] = useState({ 
     name: '', category: '', quantity: '', basePrice: '',
     quality: {
@@ -132,8 +134,29 @@ const FarmerDashboard = () => {
   // Pseudo-live timer (if we mapped end time, but backend didn't return end time in getFarmerProductsWithBids)
   // Let's just indicate active status.
 
+  const handleNameChange = (e) => {
+    const name = e.target.value;
+    const detected = detectCategory(name);
+    setNewProduct(prev => ({
+      ...prev,
+      name,
+      category: detected || (name.trim() === '' ? '' : prev.category)
+    }));
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
+    setError('');
+
+    if (!newProduct.name.trim()) {
+      setError('Product Name is required.');
+      return;
+    }
+    if (!newProduct.category) {
+      setError('Category is required. Please select or enter a valid category.');
+      return;
+    }
+
     try {
       await api.post('/products', newProduct);
       setShowAddModal(false);
@@ -148,6 +171,7 @@ const FarmerDashboard = () => {
       fetchDashboardData();
     } catch (err) {
       console.error(err);
+      setError(err.response?.data?.message || 'Server error creating product');
     }
   };
 
@@ -176,7 +200,7 @@ const FarmerDashboard = () => {
             <Package size={18} /> Orders
           </a>
           <button 
-            onClick={() => setShowAddModal(true)}
+            onClick={() => { setError(''); setShowAddModal(true); }}
             className="bg-emerald-600 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-emerald-700 shadow-lg shadow-emerald-600/30 transition-all active:scale-95"
           >
             <Plus size={18} /> New Crop Listing
@@ -314,16 +338,37 @@ const FarmerDashboard = () => {
               </button>
             </div>
             <form onSubmit={handleAddProduct} className="space-y-6 overflow-y-auto pr-4 flex-grow custom-scrollbar">
+              {error && (
+                <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl font-medium text-sm border border-red-200">
+                  {error}
+                </div>
+              )}
               <div className="space-y-4 pb-6 border-b border-stone-100">
                 <h3 className="font-bold text-lg text-emerald-800 bg-emerald-50 px-4 py-2 rounded-xl inline-block mb-2">Basic Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Crop Name</label>
-                    <input required type="text" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-medium" placeholder="E.g. Alphonso Mango" />
+                    <input required type="text" value={newProduct.name} onChange={handleNameChange} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-medium" placeholder="E.g. Alphonso Mango" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Category</label>
-                    <input required type="text" value={newProduct.category} onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-medium" placeholder="E.g. Fruits" />
+                    <select required value={newProduct.category} onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })} className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-medium">
+                      <option value="">Select Category</option>
+                      <option value="Fruits">Fruits</option>
+                      <option value="Vegetables">Vegetables</option>
+                      <option value="Grains">Grains</option>
+                      <option value="Pulses">Pulses</option>
+                      <option value="Oil Seeds">Oil Seeds</option>
+                      <option value="Cash Crops">Cash Crops</option>
+                      <option value="Spices">Spices</option>
+                      <option value="Flowers">Flowers</option>
+                      <option value="Herbs">Herbs</option>
+                      <option value="Dry Fruits">Dry Fruits</option>
+                      <option value="Plantation Crops">Plantation Crops</option>
+                      <option value="Medicinal Plants">Medicinal Plants</option>
+                      <option value="Fodder Crops">Fodder Crops</option>
+                      <option value="Organic Products">Organic Products</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1.5">Quantity (kg)</label>
