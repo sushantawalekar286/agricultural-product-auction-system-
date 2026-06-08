@@ -3,6 +3,7 @@ import { NavLink, Routes, Route, Navigate } from 'react-router-dom';
 import { LayoutDashboard, Play, ShieldAlert, Users, ShoppingBag, Bell, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { showLogoutConfirm } from '../utils/sweetAlert';
 
 // Admin Subpages
 import AdminOverview from './admin/AdminOverview';
@@ -19,8 +20,11 @@ const AdminLayout = () => {
   const { logout } = useAuth();
   const { t } = useTranslation();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    const confirmed = await showLogoutConfirm();
+    if (confirmed) {
+      logout();
+    }
   };
 
   const navItems = [

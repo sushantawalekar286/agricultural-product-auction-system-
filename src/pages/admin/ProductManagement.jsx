@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { Link } from 'react-router-dom';
+import { showDeleteConfirm, showSuccess, showError, showValidationError, showLoading, closeLoading, showAuctionSuccess, showInputPrompt } from '../../utils/sweetAlert';
 import { Trash2, ShoppingBag, Play } from 'lucide-react';
 
 const ProductManagement = () => {
@@ -20,26 +21,40 @@ const ProductManagement = () => {
   };
 
   const handleDeleteProduct = async (id) => {
-    if (window.confirm('Remove this product permanently?')) {
+    const confirmed = await showDeleteConfirm('Remove Product?', 'Remove this product permanently?');
+    if (confirmed) {
       try {
+        showLoading('Removing Product...', 'Please wait...');
         await api.delete(`/products/${id}`);
+        closeLoading();
+        await showSuccess('Product Deleted Successfully');
         fetchData();
       } catch (err) {
+        closeLoading();
+        showError(err.response?.data?.message || 'Error removing product');
         console.error(err);
       }
     }
   };
 
   const handleStartAuction = async (productId) => {
+    const resValue = await showInputPrompt('Start Auction', 'Enter auction duration in minutes:', '5', '5');
+    if (!resValue) return;
+    const durationMinutes = parseFloat(resValue);
+    if (isNaN(durationMinutes) || durationMinutes <= 0) {
+      showValidationError('Invalid auction duration');
+      return;
+    }
     try {
-      const durationMinutes = parseFloat(prompt('Enter auction duration in minutes:', '5'));
-      if (isNaN(durationMinutes) || durationMinutes <= 0) return;
+      showLoading('Starting Auction...', 'Please wait while we initialize the auction.');
       const startTime = new Date();
       await api.post('/auctions', { productId, startTime, durationMinutes });
-      alert('Auction started successfully!');
+      closeLoading();
+      await showAuctionSuccess('Auction Started Successfully');
       fetchData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Error starting auction');
+      closeLoading();
+      showError(err.response?.data?.message || 'Error starting auction');
     }
   };
 

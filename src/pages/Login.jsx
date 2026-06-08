@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { showLoginSuccess, showError, showLoading, closeLoading, showValidationError } from '../utils/sweetAlert';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -15,11 +16,24 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
+    if (!email || !password) {
+      showValidationError('Please fill in all fields');
+      return;
+    }
+
     try {
+      showLoading('Logging in...', 'Verifying credentials. Please wait.');
       await login(email, password);
+      closeLoading();
+      await showLoginSuccess();
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      closeLoading();
+      const errMsg = err.response?.data?.message || 'Login failed';
+      setError(errMsg);
+      showError(errMsg);
     }
   };
 

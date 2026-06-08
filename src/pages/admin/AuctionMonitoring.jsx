@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useSocket } from '../../context/SocketContext';
+import { showConfirm, showSuccess, showError, showValidationError, showLoading, closeLoading, showInputPrompt } from '../../utils/sweetAlert';
 import { Play, Square, Clock, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -70,23 +71,39 @@ const AuctionMonitoring = () => {
   }, [auctions]);
 
   const handleStopAuction = async (auctionId) => {
-    if (window.confirm('Force close this auction immediately?')) {
+    const confirmed = await showConfirm('Force Close Auction?', 'Force close this auction immediately?');
+    if (confirmed) {
       try {
+        showLoading('Closing Auction...', 'Please wait...');
         await api.put(`/auctions/${auctionId}/stop`);
+        closeLoading();
+        await showSuccess('Auction Completed');
         fetchAuctions();
       } catch (err) {
+        closeLoading();
+        showError(err.response?.data?.message || 'Error force closing auction');
         console.error(err);
       }
     }
   };
 
   const handleExtendAuction = async (auctionId) => {
-    const min = prompt("Enter minutes to extend:", "5");
-    if (!min || isNaN(min) || min <= 0) return;
+    const resValue = await showInputPrompt('Extend Auction', 'Enter minutes to extend:', '5', '5');
+    if (!resValue) return;
+    const min = parseFloat(resValue);
+    if (isNaN(min) || min <= 0) {
+      showValidationError('Invalid minutes');
+      return;
+    }
     try {
+      showLoading('Extending Auction...', 'Please wait...');
       await api.put(`/auctions/${auctionId}/extend`, { minutes: min });
+      closeLoading();
+      await showSuccess('Auction Extended by 1 Minute');
       fetchAuctions();
     } catch (err) {
+      closeLoading();
+      showError(err.response?.data?.message || 'Error extending auction');
       console.error(err);
     }
   };

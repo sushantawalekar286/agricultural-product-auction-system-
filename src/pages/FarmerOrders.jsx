@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import { showOrderSuccess, showPaymentSuccess, showError, showConfirm, showLoading, closeLoading } from '../utils/sweetAlert';
 import { Package, Truck, CheckCircle, Banknote } from 'lucide-react';
 
 const FarmerOrders = () => {
@@ -23,11 +24,22 @@ const FarmerOrders = () => {
 
   const updateStatus = async (orderId, orderStatus, paymentStatus) => {
     try {
+      showLoading('Updating Order Status...', 'Please wait...');
       await api.put('/orders/update-status', { orderId, orderStatus, paymentStatus });
-      alert('Order updated!');
+      closeLoading();
+      
+      if (paymentStatus === 'paid') {
+        await showPaymentSuccess('Payment Status Updated');
+      } else if (orderStatus === 'delivered') {
+        await showOrderSuccess('Order Delivered Successfully');
+      } else {
+        await showOrderSuccess('Order Updated Successfully');
+      }
+      
       fetchOrders();
     } catch (err) {
-      alert(err.response?.data?.message || 'Error updating order');
+      closeLoading();
+      showError(err.response?.data?.message || 'Error updating order');
     }
   };
 
@@ -137,8 +149,9 @@ const FarmerOrders = () => {
                   <div className="pt-2 border-t border-stone-50">
                     {order.paymentStatus === 'pending' ? (
                       <button
-                        onClick={() => {
-                          if (window.confirm('Are you sure you want to mark this order as paid?')) {
+                        onClick={async () => {
+                          const confirmed = await showConfirm('Mark as Paid?', 'Are you sure you want to mark this order as paid?');
+                          if (confirmed) {
                             updateStatus(order._id, undefined, 'paid');
                           }
                         }}

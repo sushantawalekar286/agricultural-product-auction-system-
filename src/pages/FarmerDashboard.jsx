@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useSocket } from '../context/SocketContext';
+import { showSuccess, showError, showWarning, showConfirm, showDeleteConfirm, showValidationError, showLoading, closeLoading } from '../utils/sweetAlert';
 import { Plus, Package, TrendingUp, DollarSign, Trash2, Edit3, X, Clock, Bell, Check } from 'lucide-react';
 import { detectCategory } from '../utils/categoryDetector';
 
@@ -149,16 +150,30 @@ const FarmerDashboard = () => {
     setError('');
 
     if (!newProduct.name.trim()) {
-      setError('Product Name is required.');
+      showValidationError('Product Name is required.');
       return;
     }
     if (!newProduct.category) {
-      setError('Category is required. Please select or enter a valid category.');
+      showValidationError('Category is required. Please select or enter a valid category.');
+      return;
+    }
+
+    const quantityVal = parseFloat(newProduct.quantity);
+    if (isNaN(quantityVal) || quantityVal <= 0) {
+      showValidationError('Invalid quantity. Quantity must be greater than 0.');
+      return;
+    }
+    const priceVal = parseFloat(newProduct.basePrice);
+    if (isNaN(priceVal) || priceVal <= 0) {
+      showValidationError('Invalid price. Base Price must be greater than 0.');
       return;
     }
 
     try {
+      showLoading('Uploading Product...', 'Please wait while we publish your crop listing.');
       await api.post('/products', newProduct);
+      closeLoading();
+      await showSuccess('Product Added Successfully');
       setShowAddModal(false);
       setNewProduct({ 
         name: '', category: '', quantity: '', basePrice: '',
@@ -170,17 +185,26 @@ const FarmerDashboard = () => {
       });
       fetchDashboardData();
     } catch (err) {
+      closeLoading();
       console.error(err);
-      setError(err.response?.data?.message || 'Server error creating product');
+      const errMsg = err.response?.data?.message || 'Server error creating product';
+      setError(errMsg);
+      showError(errMsg);
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Delete this product permanently?')) {
+    const confirmed = await showDeleteConfirm('Delete Product?', 'Delete this product permanently?');
+    if (confirmed) {
       try {
+        showLoading('Deleting Product...', 'Please wait...');
         await api.delete(`/products/${id}`);
+        closeLoading();
+        await showSuccess('Product Deleted Successfully');
         fetchDashboardData();
       } catch (err) {
+        closeLoading();
+        showError(err.response?.data?.message || 'Error deleting product');
         console.error(err);
       }
     }

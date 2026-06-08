@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { showOrderSuccess, showError, showLoading, closeLoading } from '../utils/sweetAlert';
 import { PackageOpen, CreditCard, Truck, Banknote, MapPin } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -49,14 +50,19 @@ const PlaceOrder = () => {
         throw new Error('Please enter a delivery address');
       }
       
+      showLoading('Placing Order...', 'Please wait while we record your order.');
       const res = await api.post('/orders/create', {
         auctionId: id,
         ...form
       });
-      alert('Order Placed successfully!');
+      closeLoading();
+      await showOrderSuccess('Order Placed Successfully');
       navigate('/dealer/orders');
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to place order');
+      closeLoading();
+      const errMsg = err.response?.data?.message || err.message || 'Failed to place order';
+      setError(errMsg);
+      showError(errMsg);
       setSubmitting(false);
     }
   };

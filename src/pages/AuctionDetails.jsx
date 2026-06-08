@@ -4,6 +4,7 @@ import api from '../services/api';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { showBidSuccess, showError, showWarning, showSuccess, showInfo, showValidationError } from '../utils/sweetAlert';
 import { Timer, Gavel, User, History, TrendingUp, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -62,6 +63,9 @@ const AuctionDetails = () => {
       const handleBidUpdate = (data) => {
         setAuction(prev => {
           if (!prev) return prev;
+          if (user && prev.winner && prev.winner._id === user._id && data.dealer?._id !== user._id) {
+            showWarning('You Have Been Outbid');
+          }
           return { ...prev, highestBid: data.amount, winner: data.dealer };
         });
 
@@ -75,7 +79,15 @@ const AuctionDetails = () => {
 
       const handleAuctionClosed = (data) => {
         if (data.auctionId === id) {
-          setAuction(prev => prev ? { ...prev, status: 'closed' } : prev);
+          setAuction(prev => {
+            const isWinner = data.winnerId === user?._id || (prev?.winner && prev.winner._id === user?._id);
+            if (isWinner) {
+              showSuccess('Auction Winner Declared. You won the auction!');
+            } else {
+              showInfo('Auction Completed');
+            }
+            return prev ? { ...prev, status: 'closed' } : prev;
+          });
           setTimeLeft('EXPIRED');
         }
       };
@@ -83,7 +95,7 @@ const AuctionDetails = () => {
       const handleAuctionExtended = (data) => {
         if (data.auctionId === id) {
           setAuction(prev => prev ? { ...prev, endTime: data.endTime } : prev);
-          showStatusMessage(data.message || 'Auction extended by 1 minute!');
+          showWarning('Auction Extended by 1 Minute');
         }
       };
 
@@ -100,7 +112,7 @@ const AuctionDetails = () => {
     }
 
     return undefined;
-  }, [id, socket]);
+  }, [id, socket, user]);
 
   useEffect(() => {
     if (!auction?.endTime) return;
@@ -126,15 +138,28 @@ const AuctionDetails = () => {
   const handleBid = async (e) => {
     e.preventDefault();
     setError('');
+    
+    const amount = parseFloat(bidAmount);
+    if (isNaN(amount) || amount <= 0) {
+      showValidationError('Invalid bid amount');
+      return;
+    }
+    if (auction && amount <= (auction.highestBid || auction.product?.basePrice || 0)) {
+      showValidationError('Your bid must be higher than current bid');
+      return;
+    }
+
     try {
-      const amount = parseFloat(bidAmount);
       await api.post('/bids', { auctionId: id, amount });
       if (socket) {
         socket.emit('newBid', { auctionId: id, amount, dealer: user });
       }
       setBidAmount('');
+      showBidSuccess('Bid Submitted Successfully');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to place bid');
+      const errMsg = err.response?.data?.message || 'Failed to place bid';
+      setError(errMsg);
+      showValidationError(errMsg);
     }
   };
 

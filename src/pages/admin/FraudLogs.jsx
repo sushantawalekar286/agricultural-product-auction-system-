@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { ShieldAlert, Shield } from 'lucide-react';
+import { showConfirm, showSuccess, showError, showLoading, closeLoading } from '../../utils/sweetAlert';
 
 const FraudLogs = () => {
   const [fraudLogs, setFraudLogs] = useState([]);
@@ -19,11 +20,17 @@ const FraudLogs = () => {
   };
 
   const handleBlock = async (id) => {
-    if (window.confirm('Block this user due to fraud activity?')) {
+    const confirmed = await showConfirm('Block User?', 'Block this user due to fraud activity?');
+    if (confirmed) {
       try {
+        showLoading('Blocking User...', 'Please wait...');
         await api.put(`/users/${id}/block`);
+        closeLoading();
+        await showSuccess('User Blocked Successfully');
         fetchData();
       } catch (err) {
+        closeLoading();
+        showError(err.response?.data?.message || 'Error blocking user');
         console.error(err);
       }
     }

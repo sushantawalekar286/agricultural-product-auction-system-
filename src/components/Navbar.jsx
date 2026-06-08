@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { useTranslation } from 'react-i18next';
 import api from '../services/api';
+import { showLogoutConfirm } from '../utils/sweetAlert';
 import { LogOut, Gavel, LayoutDashboard, Languages, Bell, CheckCheck, X } from 'lucide-react';
 
 const Navbar = () => {
@@ -83,9 +84,12 @@ const Navbar = () => {
     i18n.changeLanguage(newLang);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    const confirmed = await showLogoutConfirm();
+    if (confirmed) {
+      logout();
+      navigate('/login');
+    }
   };
 
   const markAsRead = async (notificationId) => {

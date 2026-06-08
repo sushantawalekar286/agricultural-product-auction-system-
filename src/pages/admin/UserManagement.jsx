@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { showDeleteConfirm, showSuccess, showError, showLoading, closeLoading } from '../../utils/sweetAlert';
 import { Users, Shield, Trash2, CheckCircle, XCircle } from 'lucide-react';
 
 const UserManagement = () => {
@@ -21,19 +22,30 @@ const UserManagement = () => {
 
   const handleBlock = async (id) => {
     try {
+      showLoading('Updating User Status...', 'Please wait...');
       await api.put(`/users/${id}/block`);
+      closeLoading();
+      await showSuccess('User status updated successfully');
       fetchData();
     } catch (err) {
+      closeLoading();
+      showError(err.response?.data?.message || 'Error updating user status');
       console.error(err);
     }
   };
 
   const handleDeleteUser = async (id) => {
-    if (window.confirm('Are you sure you want to delete this user completely?')) {
+    const confirmed = await showDeleteConfirm('Delete User?', 'Are you sure you want to delete this user completely?');
+    if (confirmed) {
       try {
+        showLoading('Deleting User...', 'Please wait...');
         await api.delete(`/users/${id}`);
+        closeLoading();
+        await showSuccess('User Deleted Successfully');
         fetchData();
       } catch (err) {
+        closeLoading();
+        showError(err.response?.data?.message || 'Error deleting user');
         console.error(err);
       }
     }

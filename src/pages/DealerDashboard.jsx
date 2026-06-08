@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useSocket } from '../context/SocketContext';
+import { showBidSuccess, showError } from '../utils/sweetAlert';
 import { Play, TrendingUp, CheckCircle, Package, Clock, ShieldCheck, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -53,10 +54,11 @@ const DealerDashboard = () => {
       // Find base requirements if highest is 0 or missing, but backend handles this properly
       const calculatedAmount = Number(currentHighest) + increment;
       await api.post('/bids', { auctionId, amount: calculatedAmount });
+      await showBidSuccess('Bid Submitted Successfully');
       // Wait for socket to broadcast, or brutally fetch
       fetchEverything();
     } catch (err) {
-      alert(err.response?.data?.message || 'Error placing bid');
+      showError(err.response?.data?.message || 'Error placing bid');
     }
   };
 

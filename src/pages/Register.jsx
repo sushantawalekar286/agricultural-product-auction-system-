@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { showSuccess, showError, showLoading, closeLoading, showValidationError } from '../utils/sweetAlert';
 import { User, Mail, Lock, Phone, MapPin, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -16,11 +17,41 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
+    // Form validations
+    if (!formData.name.trim()) {
+      showValidationError('Full Name is required.');
+      return;
+    }
+    if (!formData.email.trim()) {
+      showValidationError('Email Address is required.');
+      return;
+    }
+    if (!formData.phone.trim()) {
+      showValidationError('Phone Number is required.');
+      return;
+    }
+    if (!formData.location.trim()) {
+      showValidationError('Location is required.');
+      return;
+    }
+    if (!formData.password || formData.password.length < 6) {
+      showValidationError('Password must be at least 6 characters long.');
+      return;
+    }
+
     try {
+      showLoading('Registering Account...', 'Creating your profile. Please wait.');
       await register(formData);
-      navigate('/');
+      closeLoading();
+      await showSuccess('Registration Successful. Please login to continue.');
+      navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      closeLoading();
+      const errMsg = err.response?.data?.message || 'Registration failed';
+      setError(errMsg);
+      showError(errMsg);
     }
   };
 
