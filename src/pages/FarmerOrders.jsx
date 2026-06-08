@@ -150,8 +150,8 @@ const FarmerOrders = () => {
                     {order.paymentStatus === 'pending' ? (
                       <button
                         onClick={async () => {
-                          const confirmed = await showConfirm('Mark as Paid?', 'Are you sure you want to mark this order as paid?');
-                          if (confirmed) {
+                          const result = await showConfirm('Mark as Paid?', 'Are you sure you want to mark this order as paid?');
+                          if (result.isConfirmed) {
                             updateStatus(order._id, undefined, 'paid');
                           }
                         }}

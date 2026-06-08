@@ -61,10 +61,10 @@ export const showInfo = (message) => {
 
 /**
  * Show a general confirmation dialog.
- * Resolves to true if confirmed, false otherwise.
+ * Resolves to the SweetAlert2 result object.
  */
-export const showConfirm = async (title, text) => {
-  const result = await swalCustom.fire({
+export const showConfirm = (title, text) => {
+  return swalCustom.fire({
     title: title || 'Are you sure?',
     text: text || 'This action cannot be undone.',
     icon: 'warning',
@@ -72,14 +72,13 @@ export const showConfirm = async (title, text) => {
     confirmButtonText: 'Yes',
     cancelButtonText: 'Cancel'
   });
-  return result.isConfirmed;
 };
 
 /**
  * Show a delete confirmation dialog.
  */
-export const showDeleteConfirm = async (title, text) => {
-  const result = await swalCustom.fire({
+export const showDeleteConfirm = (title, text) => {
+  return swalCustom.fire({
     title: title || 'Are you sure?',
     text: text || 'This action cannot be undone.',
     icon: 'warning',
@@ -91,7 +90,6 @@ export const showDeleteConfirm = async (title, text) => {
       cancelButton: 'bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold py-2 px-6 rounded-xl mx-2 transition-all cursor-pointer outline-none text-sm border-0'
     }
   });
-  return result.isConfirmed;
 };
 
 /**
@@ -146,8 +144,8 @@ export const showLoginSuccess = () => {
 /**
  * Show logout confirmation dialog.
  */
-export const showLogoutConfirm = async () => {
-  const result = await swalCustom.fire({
+export const showLogoutConfirm = () => {
+  return swalCustom.fire({
     title: 'Are you sure?',
     text: 'You will be logged out of your session.',
     icon: 'warning',
@@ -155,7 +153,6 @@ export const showLogoutConfirm = async () => {
     confirmButtonText: 'Yes, Logout',
     cancelButtonText: 'Cancel'
   });
-  return result.isConfirmed;
 };
 
 /**
@@ -203,7 +200,7 @@ export const showInputPrompt = async (title, text, placeholder = '', defaultValu
  * Show a persistent loading alert.
  */
 export const showLoading = (title = 'Loading...', text = 'Please wait') => {
-  swalCustom.fire({
+  return swalCustom.fire({
     title,
     text,
     allowOutsideClick: false,
@@ -219,5 +216,5 @@ export const showLoading = (title = 'Loading...', text = 'Please wait') => {
  * Close any active loading alerts.
  */
 export const closeLoading = () => {
-  swalCustom.close();
+  return swalCustom.close();
 };

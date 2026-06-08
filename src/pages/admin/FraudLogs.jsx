@@ -20,8 +20,8 @@ const FraudLogs = () => {
   };
 
   const handleBlock = async (id) => {
-    const confirmed = await showConfirm('Block User?', 'Block this user due to fraud activity?');
-    if (confirmed) {
+    const result = await showConfirm('Block User?', 'Block this user due to fraud activity?');
+    if (result.isConfirmed) {
       try {
         showLoading('Blocking User...', 'Please wait...');
         await api.put(`/users/${id}/block`);

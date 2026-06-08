@@ -85,8 +85,8 @@ const Navbar = () => {
   };
 
   const handleLogout = async () => {
-    const confirmed = await showLogoutConfirm();
-    if (confirmed) {
+    const result = await showLogoutConfirm();
+    if (result.isConfirmed) {
       logout();
       navigate('/login');
     }

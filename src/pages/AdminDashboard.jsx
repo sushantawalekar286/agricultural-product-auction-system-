@@ -21,8 +21,8 @@ const AdminLayout = () => {
   const { t } = useTranslation();
 
   const handleLogout = async () => {
-    const confirmed = await showLogoutConfirm();
-    if (confirmed) {
+    const result = await showLogoutConfirm();
+    if (result.isConfirmed) {
       logout();
     }
   };

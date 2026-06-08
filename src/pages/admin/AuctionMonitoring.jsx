@@ -71,8 +71,8 @@ const AuctionMonitoring = () => {
   }, [auctions]);
 
   const handleStopAuction = async (auctionId) => {
-    const confirmed = await showConfirm('Force Close Auction?', 'Force close this auction immediately?');
-    if (confirmed) {
+    const result = await showConfirm('Force Close Auction?', 'Force close this auction immediately?');
+    if (result.isConfirmed) {
       try {
         showLoading('Closing Auction...', 'Please wait...');
         await api.put(`/auctions/${auctionId}/stop`);

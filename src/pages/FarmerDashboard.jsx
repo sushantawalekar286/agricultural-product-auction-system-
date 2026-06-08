@@ -194,8 +194,8 @@ const FarmerDashboard = () => {
   };
 
   const handleDelete = async (id) => {
-    const confirmed = await showDeleteConfirm('Delete Product?', 'Delete this product permanently?');
-    if (confirmed) {
+    const result = await showDeleteConfirm('Delete Product?', 'Delete this product permanently?');
+    if (result.isConfirmed) {
       try {
         showLoading('Deleting Product...', 'Please wait...');
         await api.delete(`/products/${id}`);

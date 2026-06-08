@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { showDeleteConfirm, showSuccess, showError, showLoading, closeLoading } from '../../utils/sweetAlert';
+import { showDeleteConfirm, showConfirm, showSuccess, showError, showLoading, closeLoading } from '../../utils/sweetAlert';
 import { Users, Shield, Trash2, CheckCircle, XCircle } from 'lucide-react';
 
 const UserManagement = () => {
@@ -20,23 +20,27 @@ const UserManagement = () => {
     }
   };
 
-  const handleBlock = async (id) => {
-    try {
-      showLoading('Updating User Status...', 'Please wait...');
-      await api.put(`/users/${id}/block`);
-      closeLoading();
-      await showSuccess('User status updated successfully');
-      fetchData();
-    } catch (err) {
-      closeLoading();
-      showError(err.response?.data?.message || 'Error updating user status');
-      console.error(err);
+  const handleBlock = async (id, isBlocked) => {
+    const actionText = isBlocked ? 'Unblock' : 'Block';
+    const result = await showConfirm(`${actionText} User?`, `Are you sure you want to ${actionText.toLowerCase()} this user?`);
+    if (result.isConfirmed) {
+      try {
+        showLoading('Updating User Status...', 'Please wait...');
+        await api.put(`/users/${id}/block`);
+        closeLoading();
+        await showSuccess(`User ${actionText}ed Successfully`);
+        fetchData();
+      } catch (err) {
+        closeLoading();
+        showError(err.response?.data?.message || 'Error updating user status');
+        console.error(err);
+      }
     }
   };
 
   const handleDeleteUser = async (id) => {
-    const confirmed = await showDeleteConfirm('Delete User?', 'Are you sure you want to delete this user completely?');
-    if (confirmed) {
+    const result = await showDeleteConfirm('Delete User?', 'Are you sure you want to delete this user completely?');
+    if (result.isConfirmed) {
       try {
         showLoading('Deleting User...', 'Please wait...');
         await api.delete(`/users/${id}`);
@@ -121,7 +125,7 @@ const UserManagement = () => {
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
                       <button 
-                        onClick={() => handleBlock(user._id)}
+                        onClick={() => handleBlock(user._id, user.isBlocked)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1 ${
                           user.isBlocked 
                             ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' 

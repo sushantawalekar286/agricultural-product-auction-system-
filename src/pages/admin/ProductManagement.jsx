@@ -21,8 +21,8 @@ const ProductManagement = () => {
   };
 
   const handleDeleteProduct = async (id) => {
-    const confirmed = await showDeleteConfirm('Remove Product?', 'Remove this product permanently?');
-    if (confirmed) {
+    const result = await showDeleteConfirm('Remove Product?', 'Remove this product permanently?');
+    if (result.isConfirmed) {
       try {
         showLoading('Removing Product...', 'Please wait...');
         await api.delete(`/products/${id}`);
